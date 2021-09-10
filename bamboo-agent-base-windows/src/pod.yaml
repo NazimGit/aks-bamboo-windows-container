@@ -1,0 +1,43 @@
+# apiVersion: v1
+# kind: Pod
+# metadata:
+#   name: bingo-agent
+#   namespace: bingo-agent
+#   labels:
+#     name: bingo-agent
+# spec:
+#   nodeSelector:
+#     "kubernetes.io/os": windows
+#   containers:
+#   - name: bingo
+#     image: mcr.microsoft.com/windows/servercore:1809-amd64
+#     ports:
+#     - containerPort: 80
+#       name: http
+#       protocol: TCP
+#     - containerPort: 443
+#       name: https
+#     command: ["powershell"]
+#     args: ["ping", "-t", "localhost"]
+#     #   - "http://localhost:8085"
+# ---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bamboo-agent
+  namespace: bingo-agent
+  labels:
+    name: bamboo-agent
+spec:
+  nodeSelector:
+    "kubernetes.io/os": windows
+  containers:
+  - name: bamboo-agent
+    image: dockerhubreg/bambooagent
+    ports:
+    - containerPort: 80
+      name: http
+      protocol: TCP
+    - containerPort: 443
+      name: https
+    args: ["http://20.76.222.156"]

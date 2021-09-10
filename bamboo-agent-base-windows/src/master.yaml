@@ -1,0 +1,100 @@
+# apiVersion: v1
+# kind: Namespace
+# metadata:
+#   name: bingo
+#   labels:
+#     name: bingo
+# ---
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: bamboo-master-bingo
+  namespace: bingo
+  labels:
+    app: bamboo-master-bingo
+spec:
+  initContainers:
+  - name: take-data-dir-ownership
+    image: alpine:3
+    command:
+    - chown
+    - -R
+    - 1000:1000
+    - /var/atlassian/application-data/bamboo
+    volumeMounts:
+    - mountPath: "/var/atlassian/application-data/bamboo"
+      name: volume
+  containers:
+  - image: "atlassian/bamboo-server:latest"
+    name: bamboo-image
+    ports:
+    - containerPort: 8085
+      protocol: TCP
+    - containerPort: 54663
+      protocol: TCP
+    volumeMounts:
+    - mountPath: "/var/atlassian/application-data/bamboo"
+      name: volume
+  nodeSelector:
+    kubernetes.io/os: linux
+    # resources:
+    #   requests:
+    #    memory: "2Gi"
+    #    cpu: "2"
+    #   limits:
+    #    memory: "4Gi"
+    #    cpu: "3"
+  volumes:
+  - name: volume
+    persistentVolumeClaim:
+      claimName: pvcbingo
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bamboo-master-bingo
+  namespace: bingo
+spec:
+  selector:
+    app: bamboo-master-bingo
+  ports:
+  - protocol: TCP
+    name: master
+    port: 80
+    targetPort: 8085
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bamboo-master-bingo-windows
+  namespace: bingo
+  annotations:
+    service.beta.kubernetes.io/azure-load-balancer-internal: "true"
+spec:
+  type: LoadBalancer
+  selector:
+    app: bamboo-master-bingo
+  ports:
+  - protocol: TCP
+    name: broker
+    port: 54663
+    targetPort: 54663
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: bamboo-master
+  namespace: bingo
+  annotations:
+    kubernetes.io/ingress.class: azure/application-gateway
+    # appgw.ingress.kubernetes.io/appgw-ssl-certificate: aks-ingress-tls
+spec:
+  rules:
+  - http:
+      paths:
+      - path: /
+        backend:
+          serviceName: bamboo-master-bingo
+          servicePort: 80

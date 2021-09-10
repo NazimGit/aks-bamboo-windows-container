@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: busybox
+  namespace: bingo
+spec:
+  initContainers:
+  - name: take-data-dir-ownership
+    image: alpine:3
+    command:
+    - chown
+    - -R
+    - 1000:1000
+    - /var/atlassian/application-data/bamboo
+    volumeMounts:
+    - mountPath: "/var/atlassian/application-data/bamboo"
+      name: volume
+  containers:
+  - image: busybox
+    command:
+      - sleep
+      - "3600"
+    imagePullPolicy: IfNotPresent
+    name: busybox
+  nodeSelector:
+    kubernetes.io/os: linux
+  restartPolicy: Always
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: shell-demo
+  namespace: bingo
+spec:
+  containers:
+  - name: nginx
+    image: nginx
+  nodeSelector:
+    kubernetes.io/os: linux
+  restartPolicy: Always

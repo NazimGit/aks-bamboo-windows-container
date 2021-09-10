@@ -1,0 +1,29 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pvcbingo
+  namespace: bingo
+spec:
+  storageClassName: ""
+  resources:
+    requests:
+      storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pvbingo
+spec:
+  capacity:
+    storage: 100Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    path: "/cnisa/nfs"
+    server: cnisa.file.core.windows.net
+  mountOptions:
+  - vers=4
+  - minorversion=1
+  - sec=sys
